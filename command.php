@@ -1,7 +1,7 @@
 <?php
 include("include/broadlink.php");
 
-$rm = broadlink::createDevice('192.168.10.134','87:f0:77:00:3d:3a', 80, 0x2737);
+$rm = broadlink::createDevice('192.168.10.134','3a:6d:00:77:0f:78',  0x2737);
 $auth = $rm->authenticate();
 
 if($auth) {

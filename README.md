@@ -12,11 +12,12 @@ This is a fork of [tasict/broadlink-device-php](https://github.com/tasict/broadl
 which used the Python Broadlink repo [mjg59/python-broadlink](https://github.com/mjg59/python-broadlink/blob/master/README.md)
 
 I updated the PHP class to include:
- * Support more Broadlink devices
+ * Support more Broadlink devices than oringinal fork
  * Use OpenSSL instead of the depreciated mcrypt for encryption
  * Minor refactored of code
  * Added a loop to try to authenticate a couple of times before failing 
  * Updated examples to be CLI and allow for quick exit when learning buttons
+ * Added Send Command method 
  
  
 ## Example Use
