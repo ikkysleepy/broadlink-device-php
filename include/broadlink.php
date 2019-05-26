@@ -529,6 +529,12 @@ class broadlink
         return ['error' => $error, 'success' => $success, 'results' => $results, 'total_time' => $total_start_time];
     }
 
+    public static function convertPronto2Broadlink($code){
+        $pulses = self::pronto2lirc($code);
+        $packets = self::lirc2broadlink($pulses);
+        return implode(array_map('bin2hex',$packets));
+    }
+
     protected static function byteArray(int $size): array
     {
         $packet = [];
@@ -558,6 +564,59 @@ class broadlink
         return implode(array_map("chr", $this->iv));
     }
 
+    private static function pronto2lirc($protoHex){
+        $codes = [];
+        $proto_hexes = explode(" ", $protoHex);
+        foreach($proto_hexes as $hex_pair){
+            $first_hex = hexdec ($hex_pair);
+            $codes[] = $first_hex;
+        }
+
+        if ($codes[0]){
+            echo "Pronto code should start with 0000";
+            return false;
+        }else if (count($codes) != (4 + 2 * ($codes[2] + $codes[3]))){
+            echo "Number of pulse widths does not match the preamble";
+            return false;
+        }
+
+        $frequency = 1 / ($codes[1] * 0.241246);
+        $lirc = [];
+        foreach(array_slice($codes,4) as $code){
+            $lirc[] = (int) round ($code/$frequency);
+        }
+
+        return $lirc;
+    }
+
+    private static function lirc2broadlink($pulses){
+        $array = [];
+        foreach($pulses as $pulse){
+            $current_pulse = $pulse * 269 / 8192;  # 32.84ms units
+
+            if ($current_pulse < 256) {
+                $array[]= pack('C', $current_pulse);  # big endian (1-byte)
+            }else{
+                $array[]= pack('c*', 0x00);
+                $array[]= pack('n', $current_pulse);  # big endian (2-bytes)
+            }
+
+        }
+
+        $packet[] = pack('c*', 0x26, 0x00);
+        $packet[] = pack('v', count($array)+1);  # little endian byte count /unsigned short (always 16 bit, little endian byte order)
+        $packet = array_merge($packet, $array);
+        $packet[] = pack('c*', 0x0d, 0x05);
+
+
+        # Add 0s to make ultimate packet size a multiple of 16 for 128-bit AES encryption.
+        $remainder = (int) (count($packet) + 4 + 4) % 16;  # rm.send_data() adds 4-byte header (02 00 00 00)
+        if($remainder >0 ) {
+            $packet[] = (16 - $remainder);
+        }
+
+        return $packet;
+    }
 }
 
 class SP1 extends broadlink
