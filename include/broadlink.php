@@ -497,7 +497,7 @@ class broadlink
 
     }
 
-    public function sendCommands( string $host, string $mac_address, string $device_type, string $command, int $repeat = 1): array
+    public static function sendCommands( string $host, string $mac_address, string $device_type, string $command, int $repeat = 1): array
     {
         $total_start_time = time();
         $success = 0;
