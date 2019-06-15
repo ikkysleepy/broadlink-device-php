@@ -513,8 +513,10 @@ class broadlink
             $auth = $rm->authenticate();
             if($auth) {
                 $response = 200;
-                $rm->sendData($command);
-                $success++;
+                if(method_exists($rm,'sendData')) {
+                    $rm->sendData($command);
+                    $success++;
+                }
             }else{
                 $error++;
                 $error_msg = 'Could not Authenticate';
